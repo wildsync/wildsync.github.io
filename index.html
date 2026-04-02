@@ -1,6 +1,925 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WildSync - Advanced HubSpot & Google Calendar Integration</title>
+  <meta name="description" content="WildSync supercharges your HubSpot-Google Calendar sync with real-time multi-calendar support, smart routing, revenue attribution, and team analytics.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --orange-50: #fff7ed;
+      --orange-100: #ffedd5;
+      --orange-200: #fed7aa;
+      --orange-400: #fb923c;
+      --orange-500: #f97316;
+      --orange-600: #ea580c;
+      --orange-700: #c2410c;
+      --hub-orange: #ff7a59;
+      --google-blue: #4285f4;
+      --gray-50: #f9fafb;
+      --gray-100: #f3f4f6;
+      --gray-200: #e5e7eb;
+      --gray-300: #d1d5db;
+      --gray-400: #9ca3af;
+      --gray-500: #6b7280;
+      --gray-600: #4b5563;
+      --gray-700: #374151;
+      --gray-800: #1f2937;
+      --gray-900: #111827;
+      --green-500: #22c55e;
+      --red-400: #f87171;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--gray-800);
+      line-height: 1.6;
+      background: #fff;
+      overflow-x: hidden;
+    }
+
+    /* ── NAV ── */
+    .nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(255,255,255,.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--gray-200);
+      transition: box-shadow .3s;
+    }
+    .nav.scrolled { box-shadow: 0 1px 12px rgba(0,0,0,.08); }
+    .nav-inner {
+      max-width: 1200px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; height: 64px;
+    }
+    .logo {
+      font-weight: 800; font-size: 1.35rem; color: var(--gray-900);
+      text-decoration: none; display: flex; align-items: center; gap: 8px;
+    }
+    .logo-icon {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: linear-gradient(135deg, var(--orange-500), var(--orange-600));
+      display: grid; place-items: center; color: #fff; font-size: .85rem;
+    }
+    .nav-links { display: flex; align-items: center; gap: 32px; }
+    .nav-links a {
+      text-decoration: none; color: var(--gray-600); font-size: .9rem;
+      font-weight: 500; transition: color .2s;
+    }
+    .nav-links a:hover { color: var(--gray-900); }
+    .nav-cta {
+      background: var(--orange-500) !important; color: #fff !important;
+      padding: 8px 20px !important; border-radius: 8px;
+      font-weight: 600 !important; transition: background .2s !important;
+    }
+    .nav-cta:hover { background: var(--orange-600) !important; }
+    .mobile-toggle { display: none; background: none; border: none; cursor: pointer; padding: 4px; }
+    .mobile-toggle span { display: block; width: 24px; height: 2px; background: var(--gray-700); margin: 5px 0; transition: .3s; }
+
+    /* ── HERO ── */
+    .hero {
+      padding: 140px 24px 100px;
+      text-align: center;
+      background: linear-gradient(180deg, var(--orange-50) 0%, #fff 100%);
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: ''; position: absolute; top: -200px; left: 50%; transform: translateX(-50%);
+      width: 800px; height: 800px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(249,115,22,.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-inner { max-width: 820px; margin: 0 auto; position: relative; }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: #fff; border: 1px solid var(--gray-200);
+      border-radius: 100px; padding: 6px 16px 6px 8px;
+      font-size: .8rem; font-weight: 600; color: var(--gray-600);
+      margin-bottom: 28px; box-shadow: 0 1px 4px rgba(0,0,0,.04);
+    }
+    .hero-badge-dot {
+      width: 8px; height: 8px; border-radius: 50%; background: var(--green-500);
+      animation: pulse-dot 2s infinite;
+    }
+    @keyframes pulse-dot {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(34,197,94,.4); }
+      50% { box-shadow: 0 0 0 6px rgba(34,197,94,0); }
+    }
+    .hero h1 {
+      font-size: clamp(2.4rem, 5.5vw, 3.8rem); font-weight: 800;
+      line-height: 1.1; letter-spacing: -.03em;
+      color: var(--gray-900); margin-bottom: 20px;
+    }
+    .hero h1 .gradient {
+      background: linear-gradient(135deg, var(--orange-500), var(--hub-orange));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero p {
+      font-size: clamp(1.05rem, 2vw, 1.25rem); color: var(--gray-500);
+      max-width: 600px; margin: 0 auto 36px; line-height: 1.7;
+    }
+    .hero-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 14px 28px; border-radius: 12px;
+      font-size: 1rem; font-weight: 600; text-decoration: none;
+      transition: all .2s; cursor: pointer; border: none;
+    }
+    .btn-primary {
+      background: var(--orange-500); color: #fff;
+      box-shadow: 0 1px 2px rgba(0,0,0,.06), 0 4px 12px rgba(249,115,22,.25);
+    }
+    .btn-primary:hover {
+      background: var(--orange-600);
+      box-shadow: 0 1px 2px rgba(0,0,0,.06), 0 6px 20px rgba(249,115,22,.35);
+      transform: translateY(-1px);
+    }
+    .btn-secondary {
+      background: #fff; color: var(--gray-700);
+      border: 1px solid var(--gray-300);
+      box-shadow: 0 1px 2px rgba(0,0,0,.04);
+    }
+    .btn-secondary:hover {
+      background: var(--gray-50); border-color: var(--gray-400);
+      transform: translateY(-1px);
+    }
+    .btn svg { width: 18px; height: 18px; }
+
+    /* ── LOGOS ── */
+    .logos-bar {
+      padding: 48px 24px 56px; text-align: center;
+      border-bottom: 1px solid var(--gray-100);
+    }
+    .logos-bar p {
+      font-size: .8rem; text-transform: uppercase; letter-spacing: .1em;
+      color: var(--gray-400); font-weight: 600; margin-bottom: 28px;
+    }
+    .logos-row {
+      display: flex; align-items: center; justify-content: center;
+      gap: 48px; flex-wrap: wrap; opacity: .45;
+    }
+    .logos-row svg { height: 28px; }
+
+    /* ── HERO VISUAL ── */
+    .hero-visual {
+      max-width: 960px; margin: 60px auto 0; position: relative;
+    }
+    .hero-visual-card {
+      background: #fff; border-radius: 16px;
+      border: 1px solid var(--gray-200);
+      box-shadow: 0 4px 32px rgba(0,0,0,.06), 0 1px 4px rgba(0,0,0,.04);
+      overflow: hidden;
+    }
+    .visual-header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 16px 20px; border-bottom: 1px solid var(--gray-100);
+      background: var(--gray-50);
+    }
+    .visual-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .visual-dot:nth-child(1) { background: #ff5f57; }
+    .visual-dot:nth-child(2) { background: #ffbd2e; }
+    .visual-dot:nth-child(3) { background: #28c840; }
+    .visual-body {
+      display: grid; grid-template-columns: 260px 1fr; min-height: 380px;
+    }
+    .visual-sidebar {
+      padding: 20px; border-right: 1px solid var(--gray-100);
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .visual-sidebar-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: 8px; font-size: .85rem;
+      color: var(--gray-600); font-weight: 500;
+    }
+    .visual-sidebar-item.active {
+      background: var(--orange-50); color: var(--orange-600); font-weight: 600;
+    }
+    .visual-sidebar-dot {
+      width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+    }
+    .visual-main { padding: 24px; }
+    .visual-sync-row {
+      display: flex; align-items: center; gap: 16px;
+      padding: 14px 16px; background: var(--gray-50);
+      border-radius: 10px; margin-bottom: 10px;
+      border: 1px solid var(--gray-100);
+      animation: fadeSlideIn .6s ease both;
+    }
+    .visual-sync-row:nth-child(2) { animation-delay: .1s; }
+    .visual-sync-row:nth-child(3) { animation-delay: .2s; }
+    .visual-sync-row:nth-child(4) { animation-delay: .3s; }
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .sync-icon {
+      width: 36px; height: 36px; border-radius: 8px;
+      display: grid; place-items: center; font-size: .75rem; font-weight: 700;
+      flex-shrink: 0; color: #fff;
+    }
+    .sync-icon.hub { background: var(--hub-orange); }
+    .sync-icon.gcal { background: var(--google-blue); }
+    .sync-icon.sync-ok { background: var(--green-500); }
+    .sync-details { flex: 1; }
+    .sync-details strong { font-size: .85rem; display: block; color: var(--gray-800); }
+    .sync-details span { font-size: .75rem; color: var(--gray-400); }
+    .sync-badge {
+      font-size: .7rem; font-weight: 600; padding: 3px 10px;
+      border-radius: 100px; white-space: nowrap;
+    }
+    .sync-badge.live { background: #dcfce7; color: #16a34a; }
+    .sync-badge.queued { background: #fef9c3; color: #a16207; }
+
+    /* ── SECTION SHARED ── */
+    .section { padding: 100px 24px; }
+    .section-dark { background: var(--gray-900); color: #fff; }
+    .section-gray { background: var(--gray-50); }
+    .section-header { text-align: center; max-width: 640px; margin: 0 auto 60px; }
+    .section-header .label {
+      font-size: .8rem; text-transform: uppercase; letter-spacing: .1em;
+      color: var(--orange-500); font-weight: 700; margin-bottom: 12px;
+    }
+    .section-header h2 {
+      font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 800;
+      line-height: 1.15; letter-spacing: -.02em; margin-bottom: 16px;
+    }
+    .section-dark .section-header h2 { color: #fff; }
+    .section-header p { color: var(--gray-500); font-size: 1.05rem; line-height: 1.7; }
+    .section-dark .section-header p { color: var(--gray-400); }
+    .container { max-width: 1200px; margin: 0 auto; }
+
+    /* ── PAIN POINTS ── */
+    .pain-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px; max-width: 1000px; margin: 0 auto;
+    }
+    .pain-card {
+      background: #fff; border: 1px solid var(--gray-200);
+      border-radius: 14px; padding: 28px;
+      transition: box-shadow .2s, transform .2s;
+    }
+    .pain-card:hover {
+      box-shadow: 0 8px 24px rgba(0,0,0,.06);
+      transform: translateY(-2px);
+    }
+    .pain-icon {
+      width: 44px; height: 44px; border-radius: 10px;
+      display: grid; place-items: center; margin-bottom: 16px;
+      font-size: 1.2rem;
+    }
+    .pain-icon.red { background: #fef2f2; color: var(--red-400); }
+    .pain-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
+    .pain-card p { font-size: .9rem; color: var(--gray-500); line-height: 1.6; }
+
+    /* ── FEATURES ── */
+    .features-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+    }
+    .feature-card {
+      background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
+      border-radius: 16px; padding: 32px;
+      transition: background .2s, border-color .2s;
+    }
+    .feature-card:hover {
+      background: rgba(255,255,255,.07);
+      border-color: rgba(255,255,255,.15);
+    }
+    .feature-icon {
+      width: 48px; height: 48px; border-radius: 12px;
+      background: linear-gradient(135deg, var(--orange-500), var(--orange-600));
+      display: grid; place-items: center; margin-bottom: 20px;
+      font-size: 1.3rem;
+    }
+    .feature-card h3 {
+      font-size: 1.05rem; font-weight: 700; margin-bottom: 8px; color: #fff;
+    }
+    .feature-card p { font-size: .9rem; color: var(--gray-400); line-height: 1.65; }
+
+    /* ── COMPARISON ── */
+    .comparison-table-wrap {
+      max-width: 860px; margin: 0 auto; overflow-x: auto;
+    }
+    .comparison-table {
+      width: 100%; border-collapse: separate; border-spacing: 0;
+      background: #fff; border-radius: 16px;
+      border: 1px solid var(--gray-200);
+      overflow: hidden; font-size: .9rem;
+    }
+    .comparison-table thead th {
+      padding: 16px 20px; text-align: left;
+      background: var(--gray-50); font-weight: 700;
+      border-bottom: 1px solid var(--gray-200);
+    }
+    .comparison-table thead th:nth-child(3) {
+      background: var(--orange-50); color: var(--orange-600);
+    }
+    .comparison-table td {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--gray-100);
+    }
+    .comparison-table tr:last-child td { border-bottom: none; }
+    .comparison-table td:first-child { font-weight: 500; color: var(--gray-700); }
+    .check { color: var(--green-500); font-weight: 700; font-size: 1.1rem; }
+    .cross { color: var(--gray-300); font-weight: 700; font-size: 1.1rem; }
+    .partial { color: var(--gray-400); font-size: .8rem; }
+
+    /* ── HOW IT WORKS ── */
+    .steps { max-width: 800px; margin: 0 auto; position: relative; }
+    .steps::before {
+      content: ''; position: absolute; left: 28px; top: 56px; bottom: 56px;
+      width: 2px; background: var(--gray-200);
+    }
+    .step {
+      display: flex; gap: 24px; align-items: flex-start;
+      padding: 24px 0; position: relative;
+    }
+    .step-num {
+      width: 56px; height: 56px; border-radius: 50%; flex-shrink: 0;
+      background: var(--orange-500); color: #fff;
+      display: grid; place-items: center;
+      font-size: 1.2rem; font-weight: 800;
+      box-shadow: 0 0 0 6px #fff;
+      position: relative; z-index: 1;
+    }
+    .step-content h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: 6px; }
+    .step-content p { color: var(--gray-500); font-size: .95rem; line-height: 1.65; }
+
+    /* ── TESTIMONIALS ── */
+    .testimonials-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+    }
+    .testimonial-card {
+      background: #fff; border: 1px solid var(--gray-200);
+      border-radius: 16px; padding: 28px;
+    }
+    .testimonial-stars { color: #fbbf24; font-size: .9rem; margin-bottom: 14px; letter-spacing: 2px; }
+    .testimonial-card blockquote {
+      font-size: .92rem; color: var(--gray-600); line-height: 1.7;
+      margin-bottom: 20px; font-style: normal;
+    }
+    .testimonial-author {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .testimonial-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--orange-100); color: var(--orange-600);
+      display: grid; place-items: center;
+      font-weight: 700; font-size: .85rem;
+    }
+    .testimonial-meta strong { font-size: .85rem; display: block; }
+    .testimonial-meta span { font-size: .78rem; color: var(--gray-400); }
+
+    /* ── STATS ── */
+    .stats-row {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px;
+      text-align: center; max-width: 900px; margin: 0 auto;
+    }
+    .stat-num {
+      font-size: clamp(2rem, 4vw, 2.8rem); font-weight: 800;
+      background: linear-gradient(135deg, var(--orange-400), var(--orange-600));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .stat-label { font-size: .85rem; color: var(--gray-500); margin-top: 4px; }
+
+    /* ── CTA ── */
+    .cta-section {
+      padding: 100px 24px;
+      background: linear-gradient(135deg, var(--gray-900) 0%, #1a1a2e 100%);
+      text-align: center; position: relative; overflow: hidden;
+    }
+    .cta-section::before {
+      content: ''; position: absolute; top: -100px; right: -100px;
+      width: 500px; height: 500px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(249,115,22,.15) 0%, transparent 70%);
+    }
+    .cta-section h2 {
+      font-size: clamp(2rem, 4vw, 2.8rem); font-weight: 800; color: #fff;
+      margin-bottom: 16px; letter-spacing: -.02em; position: relative;
+    }
+    .cta-section p {
+      color: var(--gray-400); font-size: 1.05rem; max-width: 500px;
+      margin: 0 auto 36px; line-height: 1.7; position: relative;
+    }
+    .cta-section .btn { position: relative; }
+
+    /* ── FOOTER ── */
+    .footer {
+      padding: 48px 24px;
+      border-top: 1px solid var(--gray-200);
+      background: #fff;
+    }
+    .footer-inner {
+      max-width: 1200px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 16px;
+    }
+    .footer-copy { font-size: .85rem; color: var(--gray-400); }
+    .footer-links { display: flex; gap: 24px; }
+    .footer-links a {
+      font-size: .85rem; color: var(--gray-500); text-decoration: none;
+      transition: color .2s;
+    }
+    .footer-links a:hover { color: var(--gray-700); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      .features-grid, .testimonials-grid { grid-template-columns: 1fr 1fr; }
+      .stats-row { grid-template-columns: repeat(2, 1fr); gap: 24px; }
+      .visual-body { grid-template-columns: 1fr; }
+      .visual-sidebar { display: none; }
+    }
+    @media (max-width: 640px) {
+      .nav-links { display: none; }
+      .mobile-toggle { display: block; }
+      .features-grid, .testimonials-grid, .pain-grid { grid-template-columns: 1fr; }
+      .hero { padding: 120px 20px 60px; }
+      .section { padding: 64px 16px; }
+      .hero-actions { flex-direction: column; align-items: center; }
+      .steps::before { left: 22px; }
+      .step-num { width: 44px; height: 44px; font-size: 1rem; }
+      .comparison-table { font-size: .8rem; }
+      .comparison-table thead th, .comparison-table td { padding: 10px 12px; }
+    }
+
+    /* ── ANIMATIONS ── */
+    .reveal {
+      opacity: 0; transform: translateY(24px);
+      transition: opacity .6s ease, transform .6s ease;
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+  </style>
+</head>
 <body>
-  <h1>Hello World!</h1>
+
+<!-- NAV -->
+<nav class="nav" id="nav">
+  <div class="nav-inner">
+    <a href="#" class="logo">
+      <div class="logo-icon">W</div>
+      WildSync
+    </a>
+    <div class="nav-links">
+      <a href="#problems">Problems</a>
+      <a href="#features">Features</a>
+      <a href="#comparison">Compare</a>
+      <a href="#how-it-works">How It Works</a>
+      <a href="#cta" class="nav-cta">Get Early Access</a>
+    </div>
+    <button class="mobile-toggle" onclick="document.querySelector('.nav-links').classList.toggle('show')" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">
+      <div class="hero-badge-dot"></div>
+      Now in Early Access
+    </div>
+    <h1>
+      The HubSpot + Google Calendar sync<br>
+      <span class="gradient">that actually works</span>
+    </h1>
+    <p>
+      WildSync replaces HubSpot's limited native integration with real-time multi-calendar sync,
+      smart lead routing, and meeting revenue attribution your team has been asking for.
+    </p>
+    <div class="hero-actions">
+      <a href="#cta" class="btn btn-primary">
+        Start Free Trial
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
+      </a>
+      <a href="#how-it-works" class="btn btn-secondary">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15.91 11.672a.375.375 0 0 1 0 .656l-5.603 3.113a.375.375 0 0 1-.557-.328V8.887c0-.286.307-.466.557-.327l5.603 3.112Z"/></svg>
+        See How It Works
+      </a>
+    </div>
+
+    <!-- HERO VISUAL -->
+    <div class="hero-visual">
+      <div class="hero-visual-card">
+        <div class="visual-header">
+          <div class="visual-dot"></div>
+          <div class="visual-dot"></div>
+          <div class="visual-dot"></div>
+        </div>
+        <div class="visual-body">
+          <div class="visual-sidebar">
+            <div class="visual-sidebar-item active">
+              <div class="visual-sidebar-dot" style="background:var(--orange-500)"></div>
+              Sync Dashboard
+            </div>
+            <div class="visual-sidebar-item">
+              <div class="visual-sidebar-dot" style="background:var(--gray-300)"></div>
+              Routing Rules
+            </div>
+            <div class="visual-sidebar-item">
+              <div class="visual-sidebar-dot" style="background:var(--gray-300)"></div>
+              Calendar Analytics
+            </div>
+            <div class="visual-sidebar-item">
+              <div class="visual-sidebar-dot" style="background:var(--gray-300)"></div>
+              Revenue Attribution
+            </div>
+            <div class="visual-sidebar-item">
+              <div class="visual-sidebar-dot" style="background:var(--gray-300)"></div>
+              Team Settings
+            </div>
+          </div>
+          <div class="visual-main">
+            <div class="visual-sync-row">
+              <div class="sync-icon hub">H</div>
+              <div class="sync-details">
+                <strong>Demo Call - Acme Corp</strong>
+                <span>Contact: Sarah Chen &middot; Deal: $48,000</span>
+              </div>
+              <span class="sync-badge live">Synced</span>
+            </div>
+            <div class="visual-sync-row">
+              <div class="sync-icon gcal">G</div>
+              <div class="sync-details">
+                <strong>Discovery - TechFlow Inc</strong>
+                <span>Contact: Mark Rivera &middot; Deal: $24,500</span>
+              </div>
+              <span class="sync-badge live">Synced</span>
+            </div>
+            <div class="visual-sync-row">
+              <div class="sync-icon sync-ok">&#10003;</div>
+              <div class="sync-details">
+                <strong>Follow-up - DataBridge</strong>
+                <span>Contact: Priya Patel &middot; Deal: $72,000</span>
+              </div>
+              <span class="sync-badge queued">Syncing</span>
+            </div>
+            <div class="visual-sync-row">
+              <div class="sync-icon hub">H</div>
+              <div class="sync-details">
+                <strong>Onboarding - CloudFirst</strong>
+                <span>Contact: James Liu &middot; Deal: $36,800</span>
+              </div>
+              <span class="sync-badge live">Synced</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<section class="section" style="padding-top:60px;padding-bottom:60px;border-bottom:1px solid var(--gray-100)">
+  <div class="stats-row reveal">
+    <div>
+      <div class="stat-num">3x</div>
+      <div class="stat-label">Faster sync than native</div>
+    </div>
+    <div>
+      <div class="stat-num">12+</div>
+      <div class="stat-label">Calendars per user</div>
+    </div>
+    <div>
+      <div class="stat-num">99.9%</div>
+      <div class="stat-label">Sync reliability</div>
+    </div>
+    <div>
+      <div class="stat-num">0</div>
+      <div class="stat-label">Double bookings</div>
+    </div>
+  </div>
+</section>
+
+<!-- PAIN POINTS -->
+<section class="section" id="problems">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="label">The Problem</div>
+      <h2>HubSpot's native sync wasn't built for real teams</h2>
+      <p>If you've hit these walls, you're not alone. These are the top complaints from revenue teams using HubSpot + Google Calendar.</p>
+    </div>
+    <div class="pain-grid">
+      <div class="pain-card reveal">
+        <div class="pain-icon red">&#9888;</div>
+        <h3>One calendar per user</h3>
+        <p>HubSpot only syncs a single Google Calendar. If your team uses separate calendars for work, personal, or projects, availability is wrong and double-bookings happen.</p>
+      </div>
+      <div class="pain-card reveal">
+        <div class="pain-icon red">&#9888;</div>
+        <h3>Sync delays cause chaos</h3>
+        <p>Changes in Google Calendar can take minutes to reflect in HubSpot. In that window, prospects book on top of existing meetings, creating conflicts your reps have to untangle.</p>
+      </div>
+      <div class="pain-card reveal">
+        <div class="pain-icon red">&#9888;</div>
+        <h3>No smart routing</h3>
+        <p>Round-robin is all you get. No territory-based routing, no weighted distribution, no skills-based matching. Complex sales teams need more than a coin flip.</p>
+      </div>
+      <div class="pain-card reveal">
+        <div class="pain-icon red">&#9888;</div>
+        <h3>Zero meeting analytics</h3>
+        <p>How many meetings actually led to revenue? HubSpot logs meetings but doesn't connect the dots between calendar activity and pipeline outcomes.</p>
+      </div>
+      <div class="pain-card reveal">
+        <div class="pain-icon red">&#9888;</div>
+        <h3>No buffer or daily caps</h3>
+        <p>Reps get stacked back-to-back with no breathing room. No minimum notice, no cooldowns, no maximum meetings per day. Burnout by design.</p>
+      </div>
+      <div class="pain-card reveal">
+        <div class="pain-icon red">&#9888;</div>
+        <h3>Painful rescheduling</h3>
+        <p>Prospects can't easily reschedule from confirmation emails. They email your rep, who manually juggles calendars. It's 2026 &mdash; this should be one click.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="section section-dark" id="features">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="label">The Solution</div>
+      <h2>Everything HubSpot's sync should have been</h2>
+      <p>WildSync was built from the ground up to solve every limitation of the native integration.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card reveal">
+        <div class="feature-icon">&#128260;</div>
+        <h3>Real-Time Multi-Calendar Sync</h3>
+        <p>Sync unlimited Google Calendars per user. Personal, work, side-project &mdash; WildSync reads them all for true availability, updated in under 2 seconds.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon">&#9889;</div>
+        <h3>Instant Conflict Detection</h3>
+        <p>Webhook-driven architecture catches conflicts the moment they happen. No polling delays, no sync gaps, no double-bookings. Period.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon">&#127919;</div>
+        <h3>Smart Lead Routing</h3>
+        <p>Route meetings by territory, deal size, account owner, skills, language, or any HubSpot property. Weighted round-robin with load balancing built in.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon">&#128200;</div>
+        <h3>Revenue Attribution</h3>
+        <p>See exactly which meetings drive pipeline. Track meeting-to-close rates, time-to-meeting, and per-rep revenue contribution in a dedicated analytics dashboard.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon">&#9881;</div>
+        <h3>Buffer Times & Daily Caps</h3>
+        <p>Set minimum notice windows, cooldown periods between meetings, and daily/weekly meeting limits per rep. Protect your team from calendar overload.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon">&#128268;</div>
+        <h3>Workflow Triggers</h3>
+        <p>Fire HubSpot workflows when meetings are booked, rescheduled, cancelled, or completed. Auto-create tasks, update deal stages, send sequences &mdash; no manual work.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon">&#128197;</div>
+        <h3>One-Click Reschedule</h3>
+        <p>Every confirmation email includes a smart reschedule link. Prospects pick a new time, and everything updates in both HubSpot and Google Calendar automatically.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon">&#127760;</div>
+        <h3>Timezone Intelligence</h3>
+        <p>Automatically detect prospect timezones from IP, HubSpot properties, or browser. Show availability in their local time. No more "what timezone are you in?" emails.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon">&#128101;</div>
+        <h3>Team Analytics Dashboard</h3>
+        <p>Meeting volume, show rates, booking-to-close velocity, rep utilization, and coverage gaps &mdash; all in one view. Export to HubSpot reports or your BI tool.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMPARISON -->
+<section class="section section-gray" id="comparison">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="label">Side by Side</div>
+      <h2>WildSync vs. HubSpot native</h2>
+      <p>A direct comparison of what you get out of the box.</p>
+    </div>
+    <div class="comparison-table-wrap reveal">
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>Capability</th>
+            <th>HubSpot Native</th>
+            <th>WildSync</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Calendars per user</td>
+            <td>1</td>
+            <td><span class="check">&#10003;</span> Unlimited</td>
+          </tr>
+          <tr>
+            <td>Sync speed</td>
+            <td><span class="partial">Minutes</span></td>
+            <td><span class="check">&#10003;</span> &lt; 2 seconds</td>
+          </tr>
+          <tr>
+            <td>Conflict detection</td>
+            <td><span class="partial">Basic free/busy</span></td>
+            <td><span class="check">&#10003;</span> Real-time cross-calendar</td>
+          </tr>
+          <tr>
+            <td>Lead routing</td>
+            <td><span class="partial">Simple round-robin</span></td>
+            <td><span class="check">&#10003;</span> Territory, weighted, skills-based</td>
+          </tr>
+          <tr>
+            <td>Buffer times & caps</td>
+            <td><span class="cross">&#10005;</span></td>
+            <td><span class="check">&#10003;</span> Full control</td>
+          </tr>
+          <tr>
+            <td>Revenue attribution</td>
+            <td><span class="cross">&#10005;</span></td>
+            <td><span class="check">&#10003;</span> Per-meeting & per-rep</td>
+          </tr>
+          <tr>
+            <td>Workflow triggers</td>
+            <td><span class="partial">Limited</span></td>
+            <td><span class="check">&#10003;</span> Book, reschedule, cancel, complete</td>
+          </tr>
+          <tr>
+            <td>One-click reschedule</td>
+            <td><span class="cross">&#10005;</span></td>
+            <td><span class="check">&#10003;</span></td>
+          </tr>
+          <tr>
+            <td>Timezone auto-detect</td>
+            <td><span class="cross">&#10005;</span></td>
+            <td><span class="check">&#10003;</span></td>
+          </tr>
+          <tr>
+            <td>Team analytics</td>
+            <td><span class="partial">Basic</span></td>
+            <td><span class="check">&#10003;</span> Full dashboard + exports</td>
+          </tr>
+          <tr>
+            <td>Custom field mapping</td>
+            <td><span class="cross">&#10005;</span></td>
+            <td><span class="check">&#10003;</span> Any HubSpot property</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section" id="how-it-works">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="label">Setup in minutes</div>
+      <h2>Three steps to better calendar sync</h2>
+      <p>No IT tickets, no developer time. Connect your accounts, configure your rules, and go live.</p>
+    </div>
+    <div class="steps">
+      <div class="step reveal">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <h3>Connect HubSpot & Google Calendar</h3>
+          <p>One-click OAuth for both platforms. WildSync reads your existing HubSpot meeting types, contact properties, and team structure automatically. Your calendars are detected and ready to sync in under 60 seconds.</p>
+        </div>
+      </div>
+      <div class="step reveal">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <h3>Configure your sync rules</h3>
+          <p>Choose which calendars to sync per user, set buffer times and daily caps, define routing rules using any HubSpot property, and map custom fields. Our setup wizard walks you through each option with smart defaults.</p>
+        </div>
+      </div>
+      <div class="step reveal">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <h3>Go live with zero downtime</h3>
+          <p>WildSync runs alongside HubSpot's native sync during your migration window. Once you verify everything is flowing correctly, flip the switch and your team is on the upgraded sync &mdash; no meetings lost, no gaps.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="section section-gray" id="testimonials">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="label">Early Access Feedback</div>
+      <h2>Teams that made the switch</h2>
+    </div>
+    <div class="testimonials-grid">
+      <div class="testimonial-card reveal">
+        <div class="testimonial-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <blockquote>"We had 15-20 double bookings a month with the native sync. After switching to WildSync, we've had exactly zero in three months. The multi-calendar support alone was worth it."</blockquote>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">JK</div>
+          <div class="testimonial-meta">
+            <strong>Jessica Kim</strong>
+            <span>VP of Sales, ScaleGrid</span>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card reveal">
+        <div class="testimonial-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <blockquote>"Revenue attribution changed how our leadership sees the SDR team. We can now prove that our meeting-setting efforts directly drive $2.4M in pipeline per quarter."</blockquote>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">DM</div>
+          <div class="testimonial-meta">
+            <strong>Daniel Moreno</strong>
+            <span>RevOps Lead, Clearpath</span>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card reveal">
+        <div class="testimonial-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <blockquote>"Setup took 10 minutes. Our reps didn't even notice the switch except that their calendars finally worked properly. Buffer times between meetings was a game-changer for morale."</blockquote>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">AP</div>
+          <div class="testimonial-meta">
+            <strong>Anya Petrov</strong>
+            <span>Head of Sales Ops, Vendora</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section" id="cta">
+  <h2>Stop losing deals to bad calendar sync</h2>
+  <p>Join the early access program and get WildSync free for your first 3 months. No credit card required.</p>
+  <div class="hero-actions" style="justify-content:center">
+    <a href="#" class="btn btn-primary">
+      Get Early Access
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg>
+    </a>
+    <a href="#comparison" class="btn btn-secondary" style="border-color:rgba(255,255,255,.2);color:rgba(255,255,255,.7)">
+      See Full Comparison
+    </a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-copy">&copy; 2026 WildSync. All rights reserved.</div>
+    <div class="footer-links">
+      <a href="#">Privacy</a>
+      <a href="#">Terms</a>
+      <a href="#">Documentation</a>
+      <a href="#">Contact</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Sticky nav shadow
+  const nav = document.getElementById('nav');
+  window.addEventListener('scroll', () => {
+    nav.classList.toggle('scrolled', window.scrollY > 10);
+  });
+
+  // Scroll reveal
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+  reveals.forEach(el => observer.observe(el));
+
+  // Mobile nav
+  const style = document.createElement('style');
+  style.textContent = `
+    @media (max-width: 640px) {
+      .nav-links.show {
+        display: flex !important; flex-direction: column;
+        position: absolute; top: 64px; left: 0; right: 0;
+        background: #fff; padding: 20px 24px; gap: 16px;
+        border-bottom: 1px solid var(--gray-200);
+        box-shadow: 0 8px 24px rgba(0,0,0,.08);
+      }
+    }
+  `;
+  document.head.appendChild(style);
+</script>
+
 </body>
 </html>
